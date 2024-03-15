@@ -18,6 +18,8 @@ interface IState {
     swapSummary: SwapPreview
     condMetaWalletBalanceUnits: number
     condUsdcWalletBalanceUnits: number
+    condMetaWalletBalanceAmount: BN
+    condUsdcWalletBalanceAmount: BN
     ammPosition: AmmPositionWrapper
     ownershipFraction: number
 }
@@ -44,6 +46,8 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
         swapSummary: undefined,
         condMetaWalletBalanceUnits: 0,
         condUsdcWalletBalanceUnits: 0,
+        condMetaWalletBalanceAmount: new BN(0),
+        condUsdcWalletBalanceAmount: new BN(0),
         ammPosition: undefined,
         ownershipFraction: 0,
     })
@@ -51,6 +55,65 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
     const [isBuyBase, setIsBuyBase, isBuyBaseRef] = useState(true)
     const [inputUnits, setInputUnits, inputUnitsRef] = useState(0)
     const [withdrawFraction, setWithdrawFraction, withdrawFractionRef] = useState(0)
+
+    const [lpState, setLpState, lpStateRef] = useState({
+        condMetaUnits: 0,
+        condMetaAmount: new BN(0),
+        condUsdcUnits: 0,
+        condUsdcAmount: new BN(0),
+    })
+
+    const updateAddLpMeta = (inputCondMetaUnits) => {
+        console.log("updateAddLpMeta")
+        let newCondMetaAmountNumber = Math.min(inputCondMetaUnits * 10 ** amm.account.baseMintDecimals, stateValue.condMetaWalletBalanceAmount.toNumber())
+        let newCondMetaUnits = newCondMetaAmountNumber / 10 ** amm.account.baseMintDecimals
+
+        let newCondUsdcUnits = newCondMetaUnits * price
+        let newCondUsdcAmountNumber = newCondUsdcUnits * 10 ** amm.account.quoteMintDecimals
+
+        if (newCondUsdcAmountNumber > stateValue.condUsdcWalletBalanceAmount.toNumber()) {
+            newCondUsdcAmountNumber = stateValue.condUsdcWalletBalanceAmount.toNumber()
+            newCondUsdcUnits = newCondUsdcAmountNumber / 10 ** amm.account.quoteMintDecimals
+
+            newCondMetaUnits = newCondUsdcUnits / price
+            newCondMetaAmountNumber = newCondMetaUnits * 10 ** amm.account.baseMintDecimals
+        }
+
+        if (lpState.condMetaAmount != new BN(newCondMetaAmountNumber) || lpState.condUsdcAmount != new BN(newCondUsdcAmountNumber)) {
+            setLpState((val) => ({
+                condMetaUnits: newCondMetaUnits,
+                condMetaAmount: new BN(newCondMetaAmountNumber),
+                condUsdcUnits: newCondUsdcUnits,
+                condUsdcAmount: new BN(newCondUsdcAmountNumber),
+            }))
+        }
+    }
+
+    const updateAddLpUsdc = (inputCondUsdcUnits) => {
+        console.log("updateAddLpUsdc")
+        let newCondUsdcAmountNumber = Math.min(inputCondUsdcUnits * 10 ** amm.account.quoteMintDecimals, stateValue.condUsdcWalletBalanceAmount.toNumber())
+        let newCondUsdcUnits = newCondUsdcAmountNumber / 10 ** amm.account.quoteMintDecimals
+
+        let newCondMetaUnits = newCondUsdcUnits / price
+        let newCondMetaAmountNumber = newCondMetaUnits * 10 ** amm.account.baseMintDecimals
+
+        if (newCondMetaAmountNumber > stateValue.condMetaWalletBalanceAmount.toNumber()) {
+            newCondMetaAmountNumber = stateValue.condMetaWalletBalanceAmount.toNumber()
+            newCondMetaUnits = newCondMetaAmountNumber / 10 ** amm.account.baseMintDecimals
+
+            newCondUsdcUnits = newCondMetaUnits * price
+            newCondUsdcAmountNumber = newCondUsdcUnits * 10 ** amm.account.quoteMintDecimals
+        }
+
+        if (lpState.condMetaAmount != new BN(newCondMetaAmountNumber) || lpState.condUsdcAmount != new BN(newCondUsdcAmountNumber)) {
+            setLpState((val) => ({
+                condMetaUnits: newCondMetaUnits,
+                condMetaAmount: new BN(newCondMetaAmountNumber),
+                condUsdcUnits: newCondUsdcUnits,
+                condUsdcAmount: new BN(newCondUsdcAmountNumber),
+            }))
+        }
+    }
 
     const handleToggleBuySell = () => {
         console.log("handleToggleBuySell")
@@ -98,7 +161,9 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
                 setStateValue((val) => ({
                     ...val,
                     condMetaWalletBalanceUnits: condMetaBalance.value.uiAmount,
-                    condUsdcWalletBalanceUnits: condUsdcBalance.value.uiAmount
+                    condUsdcWalletBalanceUnits: condUsdcBalance.value.uiAmount,
+                    condMetaWalletBalanceAmount: new BN(condMetaBalance.value.amount),
+                    condUsdcWalletBalanceAmount: new BN(condUsdcBalance.value.amount),
                 }))
             }
         })()
@@ -209,20 +274,26 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
                             <div className="label">
                                 <span className="label-text">{isPassMarket ? "pMETA" : "fMETA"}</span>
                             </div>
-                            <input type="text" placeholder="0.00" className="w-full max-w-xs input input-sm input-bordered" data-1p-ignore data-bwignore data-lpignore="true" data-form-type="other" />
+                            <input type="text" placeholder="0.00" className="w-full max-w-xs input input-sm input-bordered" data-1p-ignore data-bwignore data-lpignore="true" data-form-type="other"
+                                onChange={(x) => updateAddLpMeta(Number(x.target.value))}
+                                value={lpState.condMetaUnits}
+                            />
                             <div className="label">
                                 <span className="label-text-alt">Balance:</span>
-                                <span className="label-text-alt">{stateValue.condMetaWalletBalanceUnits}</span>
+                                <span className="label-text-alt" onClick={(x) => updateAddLpMeta(stateValue.condMetaWalletBalanceUnits)}>{stateValue.condMetaWalletBalanceUnits}</span>
                             </div>
                         </label>
                         <label className="w-full max-w-xs form-control ">
                             <div className="label">
                                 <span className="label-text">{isPassMarket ? "pUSDC" : "fUSDC"}</span>
                             </div>
-                            <input type="text" placeholder="0.00" className="w-full max-w-xs input input-sm input-bordered" data-1p-ignore data-bwignore data-lpignore="true" data-form-type="other" />
+                            <input type="text" placeholder="0.00" className="w-full max-w-xs input input-sm input-bordered" data-1p-ignore data-bwignore data-lpignore="true" data-form-type="other"
+                                onChange={(x) => updateAddLpUsdc(Number(x.target.value))}
+                                value={lpState.condUsdcUnits}
+                            />
                             <div className="label">
                                 <span className="label-text-alt">Balance:</span>
-                                <span className="label-text-alt">{stateValue.condUsdcWalletBalanceUnits}</span>
+                                <span className="label-text-alt" onClick={(x) => updateAddLpUsdc(stateValue.condUsdcWalletBalanceUnits)}>{stateValue.condUsdcWalletBalanceUnits}</span>
                             </div>
                         </label>
 
@@ -232,10 +303,10 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
                                 let ixh = await autocratClient.addLiquidityCpi(
                                     proposal.publicKey,
                                     amm.publicKey,
-                                    new BN(0),
-                                    new BN(0),
-                                    new BN(0),
-                                    new BN(0)
+                                    lpStateRef.current.condMetaAmount,
+                                    lpStateRef.current.condUsdcAmount,
+                                    lpStateRef.current.condMetaAmount.mul(new BN(99)).div(new BN(100)), // this is basically 'slippage' to safeguard against validator front-running
+                                    lpStateRef.current.condUsdcAmount.mul(new BN(99)).div(new BN(100)),
                                 )
                                 return await ixh.rpc()
                             }}
