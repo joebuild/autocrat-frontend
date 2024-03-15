@@ -35,17 +35,21 @@ export const ProposalHeaderCard: FunctionComponent<IProps> = ({
     useEffect(() => {
         ; (async () => {
             if (connected && autocratClient) {
-                let metaATA = getATA(proposal.account.metaMint, autocratClient.provider.publicKey)[0]
-                let metaBalance = await autocratClient.provider.connection.getTokenAccountBalance(metaATA)
+                try {
+                    let metaATA = getATA(proposal.account.metaMint, autocratClient.provider.publicKey)[0]
+                    let metaBalance = await autocratClient.provider.connection.getTokenAccountBalance(metaATA)
 
-                metaWalletBalanceAmount.current = new BN(metaBalance.value.amount)
-                metaWalletBalanceUnits.current = metaBalance.value.uiAmount
+                    metaWalletBalanceAmount.current = new BN(metaBalance.value.amount)
+                    metaWalletBalanceUnits.current = metaBalance.value.uiAmount
+                } catch (e) { }
 
-                let usdcATA = getATA(proposal.account.usdcMint, autocratClient.provider.publicKey)[0]
-                let usdcBalance = await autocratClient.provider.connection.getTokenAccountBalance(usdcATA)
+                try {
+                    let usdcATA = getATA(proposal.account.usdcMint, autocratClient.provider.publicKey)[0]
+                    let usdcBalance = await autocratClient.provider.connection.getTokenAccountBalance(usdcATA)
 
-                usdcWalletBalanceAmount.current = new BN(usdcBalance.value.amount)
-                usdcWalletBalanceUnits.current = usdcBalance.value.uiAmount
+                    usdcWalletBalanceAmount.current = new BN(usdcBalance.value.amount)
+                    usdcWalletBalanceUnits.current = usdcBalance.value.uiAmount
+                } catch (e) { }
             }
         })()
     }, [proposal, connected, autocratClient])
