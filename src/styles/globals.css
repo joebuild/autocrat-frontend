@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 212 28% 17%;
+        --foreground: 0 0% 100%;
+
+        --card: 212 28% 17%;
+        --card-foreground: 0 0% 3.9%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+
+        --primary: 0 0% 100%;
+        --primary-foreground: 0 0% 98%;
+
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 0 0% 3.9%;
+
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 219 40% 11%;
+        --foreground: 218 11% 65%;
+
+        --card: var(--secondary);
+        --card-foreground: 0 0% 3.9%;
+
+        --popover: 217 19% 27%;
+        --popover-foreground: 0 0% 100%;
+
+        --primary: 262 88% 59%;
+        --primary-foreground: 0 0% 100%;
+
+        --secondary: 217 32% 14%;
+        --secondary-foreground: 0 0% 100%;
+
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+
+        --accent: 217 19% 27%;
+        --accent-foreground: 0 0% 100%;
+
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+
+        --border: 0 0% 89.8%;
+        --input: var(--secondary);
+        --ring: var(--primary);
+
+        --radius: 0.5rem;
+    }
+}
+
+@layer base {
+    body {
+        @apply bg-background text-primary-foreground;
+    }
+
+    * {
+        @apply border-border dark;
+    }
+
+    input {
+        @apply bg-accent text-primary-foreground;
+    }
+    h1 {
+        @apply text-6xl font-black;
+    }
+
+    .link {
+        @apply underline underline-offset-4 hover:opacity-80 transition-opacity duration-200;
+    }
+    .highlight {
+        background: linear-gradient(260deg, #7218e8 0.44%, #e96466 100.44%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    th {
+        @apply font-medium text-gray-400;
+    }
+
+    tbody tr {
+        @apply bg-secondary p-4;
+    }
+
+    label {
+        @apply text-gray-400 select-none cursor-pointer;
+    }
+
+    .modal {
+        transition: transform 1s, opacity 1s;
+        transform-origin: center center;
+    }
+
+    .modal-enter {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    .modal-enter-active {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .modal-exit {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .modal-exit-active {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    .narrow-container {
+        @apply px-2 w-full;
+        max-width: 1024px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.h1-dynamic {
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1.1;
+    font-weight: 900;
+}
+
+.gradient {
+    background: linear-gradient(260deg, #7218e8 0.44%, #e96466 100.44%);
+}
+
+.wallet-adapter-dropdown
+    .wallet-adapter-button:not(.wallet-adapter-modal-list) {
+    @apply bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-80 leading-none px-4 py-1 inline h-10 font-medium transition-opacity;
+}
+
+.wallet-adapter-dropdown .wallet-adapter-button-start-icon {
+    @apply hidden;
+}
+
+.wallet-adapter-modal-list,
+.dropdown-list,
+.wallet-adapter-dropdown-list-item {
+    @apply font-sans font-medium;
+}
+
+.wallet-adapter-dropdown-list {
+    @apply bg-secondary shadow-2xl;
+}
+
+.wallet-adapter-button .wallet-adapter-button-trigger button {
+    @apply !font-extrabold;
+}
+
+#jupiter-terminal button {
+    @apply !bg-secondary;
+}
