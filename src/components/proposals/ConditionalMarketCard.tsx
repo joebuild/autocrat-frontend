@@ -1,7 +1,7 @@
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AmmWrapper, ProposalWrapper, getATA } from '@themetadao/autocrat-sdk'
+import { AmmWrapper, ProposalWrapper, SwapPreview, getATA } from '@themetadao/autocrat-sdk'
 import BN from 'bn.js'
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect, useRef, useState } from 'react'
 import useAmmClientStore from 'stores/useAmmClient'
 import useAutocratClientStore from 'stores/useAutocratClient'
 import { toFormattedNumber } from 'utils/numberFormat'
@@ -37,8 +37,19 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
         setIsBuyBase(x => !x)
     }
 
-    const [condMetaWalletBalanceAmount, setCondMetaWalletBalanceAmount] = useState(new BN(0))
-    const [condUsdcWalletBalanceAmount, setCondUsdcWalletBalanceAmount] = useState(new BN(0))
+    const [inputUnits, setInputUnits] = useState(0)
+    const [swapSummary, setSwapSummary] = useState(undefined as SwapPreview)
+
+    useEffect(() => {
+        ; (async () => {
+            if (connected && amm && ammClient) {
+                try {
+                    let inputAmount = isBuyBase ? inputUnits * 10 ** amm.account.quoteMintDecimals : inputUnits * 10 ** amm.account.baseMintDecimals
+                    setSwapSummary(await ammClient.getSwapPreview(amm.account, new BN(inputAmount), isBuyBase))
+                } catch (e) { }
+            }
+        })()
+    }, [amm, connected, ammClient, inputUnits, isBuyBase])
 
     const [condMetaWalletBalanceUnits, setCondMetaWalletBalanceUnits] = useState(0)
     const [condUsdcWalletBalanceUnits, setCondUsdcWalletBalanceUnits] = useState(0)
@@ -48,14 +59,10 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
             if (connected && autocratClient) {
                 let condMetaATA = getATA(amm.account.baseMint, autocratClient.provider.publicKey)[0]
                 let condMetaBalance = await autocratClient.provider.connection.getTokenAccountBalance(condMetaATA)
-
-                setCondMetaWalletBalanceAmount(new BN(condMetaBalance.value.amount))
                 setCondMetaWalletBalanceUnits(condMetaBalance.value.uiAmount)
 
                 let condUsdcATA = getATA(amm.account.quoteMint, autocratClient.provider.publicKey)[0]
                 let condUsdcBalance = await autocratClient.provider.connection.getTokenAccountBalance(condUsdcATA)
-
-                setCondUsdcWalletBalanceAmount(new BN(condUsdcBalance.value.amount))
                 setCondUsdcWalletBalanceUnits(condUsdcBalance.value.uiAmount)
             }
         })()
@@ -118,22 +125,24 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
                             <div className="pt-0 label">
                                 <span className="label-text">{isBuyBase ? (isPassMarket ? "pUSDC" : "fUSDC") : (isPassMarket ? "pMETA" : "fMETA")}</span>
                             </div>
-                            <input type="text" placeholder="0.00" className="w-full max-w-xs input input-sm input-bordered" data-1p-ignore data-bwignore data-lpignore="true" data-form-type="other" />
+                            <input type="text" placeholder="0.00" className="w-full max-w-xs input input-sm input-bordered" data-1p-ignore data-bwignore data-lpignore="true" data-form-type="other"
+                                onChange={(x) => setInputUnits(Number(x.target.value))}
+                            />
                             <div className="label">
                                 <span className="label-text-alt">Balance:</span>
                                 <span className="label-text-alt">{isBuyBase ? condUsdcWalletBalanceUnits : condMetaWalletBalanceUnits}</span>
                             </div>
                             <div className="py-0 my-0 label">
                                 <span className="label-text-alt">Price Impact:</span>
-                                <span className="label-text-alt">4.34%</span>
+                                <span className="label-text-alt">{toFormattedNumber(swapSummary ? swapSummary.priceImpact * 100 : 0)}%</span>
                             </div>
                             <div className="py-0 my-0 label">
                                 <span className="label-text-alt">Avg. Swap Price:</span>
-                                <span className="label-text-alt">989.23</span>
+                                <span className="label-text-alt">{toFormattedNumber(swapSummary ? (swapSummary.avgSwapPrice || 0) : 0)}</span>
                             </div>
                             <div className="py-0 my-0 label">
                                 <span className="label-text-alt">Post Swap Price:</span>
-                                <span className="label-text-alt">955.80</span>
+                                <span className="label-text-alt">{toFormattedNumber(swapSummary ? swapSummary.finalPrice : 0)}</span>
                             </div>
                         </label>
 
@@ -180,12 +189,17 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
 
                         < TxButton
                             buttonLabel="Provide Liquidity"
-                            handleCall={async () =>
-                                await autocratClient.provider.connection.requestAirdrop(
-                                    autocratClient.provider.publicKey,
-                                    100 * 10 ** 9 // 100 SOL should do it
+                            handleCall={async () => {
+                                let ixh = await autocratClient.addLiquidityCpi(
+                                    proposal.publicKey,
+                                    amm.publicKey,
+                                    new BN(0),
+                                    new BN(0),
+                                    new BN(0),
+                                    new BN(0)
                                 )
-                            }
+                                return await ixh.rpc()
+                            }}
                         />
                     </div>
                 </div>
@@ -236,12 +250,15 @@ export const ConditionalMarketCard: FunctionComponent<IProps> = ({
 
                             < TxButton
                                 buttonLabel="Withdraw"
-                                handleCall={async () =>
-                                    await autocratClient.provider.connection.requestAirdrop(
-                                        autocratClient.provider.publicKey,
-                                        100 * 10 ** 9 // 100 SOL should do it
+                                handleCall={async () => {
+                                    let withdrawBps = Math.round(withdrawFraction * 100 * 100)
+                                    let ixh = await autocratClient.removeLiquidityCpi(
+                                        proposal.publicKey,
+                                        amm.publicKey,
+                                        new BN(withdrawBps)
                                     )
-                                }
+                                    return await ixh.rpc()
+                                }}
                             />
                         </div>
                     </div>

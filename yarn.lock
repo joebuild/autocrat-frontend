@@ -1183,10 +1183,10 @@
     lodash.merge "^4.6.2"
     postcss-selector-parser "6.0.10"
 
-"@themetadao/autocrat-sdk@^0.1.12":
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/@themetadao/autocrat-sdk/-/autocrat-sdk-0.1.12.tgz#36bbad6e544967d6165d56714ea071e3609e533b"
-  integrity sha512-FgpFnf2TsodOnYVytZWOhy4qUNxxdWt3oEjV3VRgZ0kDD3ukOEz7D+bhIddy6AUD3EMaffo8HsNbXiVxVe/R4Q==
+"@themetadao/autocrat-sdk@^0.1.14":
+  version "0.1.14"
+  resolved "https://registry.yarnpkg.com/@themetadao/autocrat-sdk/-/autocrat-sdk-0.1.14.tgz#791e104d29c8df36b4903bae29e1e13c97c419ad"
+  integrity sha512-XDCy5HHN6GJQTRJKauR+u7y53jdFXmTjPpOuET4d3TGubpPr+ACJhutmpt1payhwUl2UA9rHmdwbj/MzNpYfKA==
   dependencies:
     "@coral-xyz/anchor" "^0.29.0"
     "@solana/spl-token" "^0.3.7"
