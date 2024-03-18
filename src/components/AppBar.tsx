@@ -21,7 +21,7 @@ const menuItems = [
     },
     {
         label: 'Create Proposal',
-        href: '/create-proposal',
+        href: '/create',
         type: 'public',
     },
     {
@@ -29,11 +29,6 @@ const menuItems = [
         href: '/admin',
         type: 'public',
     },
-    // {
-    //     label: 'Admin',
-    //     href: '/admin',
-    //     type: 'admin',
-    // },
 ]
 
 const WalletMultiButtonDynamic = dynamic(

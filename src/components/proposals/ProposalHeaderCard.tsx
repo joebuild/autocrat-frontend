@@ -8,6 +8,7 @@ import { toFormattedNumber } from 'utils/numberFormat'
 import { TxButton } from 'components/TxButton'
 import { Button } from 'components/ui/button'
 import { AccountMeta } from '@solana/web3.js'
+import { ProposalCountdown } from './ProposalCountdown'
 
 interface IProps {
     proposal: ProposalWrapper,
@@ -31,6 +32,8 @@ export const ProposalHeaderCard: FunctionComponent<IProps> = ({
 
     const conditionalMetaToMintUnits = useRef(0)
     const conditionalUsdcToMintUnits = useRef(0)
+
+    const [currentSlot, setCurrentSlot] = useState(0)
 
     useEffect(() => {
         ; (async () => {
@@ -66,6 +69,15 @@ export const ProposalHeaderCard: FunctionComponent<IProps> = ({
         })()
     }, [proposal, connected, autocratClient])
 
+    useEffect(() => {
+        ; (async () => {
+            if (connected && autocratClient) {
+                let slot = await autocratClient.provider.connection.getSlot()
+                setCurrentSlot(slot)
+            }
+        })()
+    }, [connected, autocratClient])
+
     return (
         <div className="w-full p-4 mb-4 rounded-lg card bg-secondary">
             <div className="flex flex-row justify-evenly">
@@ -98,6 +110,27 @@ export const ProposalHeaderCard: FunctionComponent<IProps> = ({
                             return await ixh.rpc()
                         }}
                     />
+                </div>
+
+                <div className="flex flex-col w-48">
+                    <label className="w-full max-w-xs form-control no-hover">
+                        <div className="label">
+                            <span className="label-text-alt">Start Slot:</span>
+                            <span className="label-text-alt">{proposal.account.slotEnqueued.toNumber()}</span>
+                        </div>
+                        <div className="label">
+                            <span className="label-text-alt">End Slot:</span>
+                            <span className="label-text-alt">{proposal.account.slotEnqueued.toNumber() + proposal.account.slotsDuration.toNumber()}</span>
+                        </div>
+                        <div className="label">
+                            <span className="label-text-alt">Current Slot:</span>
+                            <span className="label-text-alt">{currentSlot}</span>
+                        </div>
+                        <div className="label">
+                            <span className="label-text-alt">Time remaining:</span>
+                            <span className="label-text-alt"><ProposalCountdown remainingSlots={(proposal.account.slotEnqueued.toNumber() + proposal.account.slotsDuration.toNumber() - currentSlot)} /></span>
+                        </div>
+                    </label>
                 </div>
 
                 <div className="flex flex-col">

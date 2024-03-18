@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { HomeView } from '../views/Home'
+import { CreateView } from '../views/Create'
 
 const Home: NextPage = (props) => {
     return (
@@ -9,7 +9,7 @@ const Home: NextPage = (props) => {
                 <title>MetaDAO</title>
                 <meta name="description" content="MetaDAO" />
             </Head>
-            <HomeView />
+            <CreateView />
         </div>
     )
 }
